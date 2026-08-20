@@ -1,20 +1,11 @@
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+from app.api.execution import router as execution_router
 
 app = FastAPI(title="AgentForge API")
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-@app.get("/")
-def root():
-    return {"message": "AgentForge API is running"}
+# Mount execution routes
+app.include_router(execution_router, prefix="/api", tags=["Execution"])
 
 @app.get("/health")
-def health():
+def health_check():
     return {"status": "ok"}
