@@ -8,10 +8,14 @@ class ResearcherAgent:
     def execute(self, task: Task) -> TaskResult:
         prompt = f"Perform thorough research and gather key information for task: {task.description}"
         response = self.llm.invoke(prompt)
+        
+        # Extract string content safely
+        output_text = response.content if isinstance(response.content, str) else str(response.content)
+        
         return TaskResult(
             task_id=task.id,
             agent_name="researcher",
-            output=response.content
+            output=output_text
         )
 
 class WriterAgent:
@@ -24,8 +28,12 @@ class WriterAgent:
             f"Write detailed content for task: {task.description}"
         )
         response = self.llm.invoke(prompt)
+        
+        # Extract string content safely
+        output_text = response.content if isinstance(response.content, str) else str(response.content)
+        
         return TaskResult(
             task_id=task.id,
             agent_name="writer",
-            output=response.content
+            output=output_text
         )
