@@ -14,4 +14,4 @@ def execute_workflow(request: ExecutionRequest):
         result = orchestrator.run_workflow(request.prompt)
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"LLM Execution Error: {str(e)}")
