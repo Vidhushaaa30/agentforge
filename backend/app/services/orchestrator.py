@@ -1,5 +1,6 @@
 from app.agents.planner import PlannerAgent
 from app.agents.workers import ResearcherAgent, WriterAgent
+from app.services.history_service import history_service
 
 class Orchestrator:
     def __init__(self):
@@ -21,4 +22,9 @@ class Orchestrator:
             results.append(result)
             context += f"\n--- Context from Task {task.id} ({task.title}) ---\n{result.output}\n"
 
-        return {"plan": plan, "results": results}
+        log = history_service.save_log(
+            prompt=user_prompt, 
+            results=[r.model_dump() for r in results]
+        )
+
+        return {"execution_id": log.id, "plan": plan, "results": results}
