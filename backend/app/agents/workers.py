@@ -1,12 +1,14 @@
 from app.core.config import get_llm
+from app.core.prompts import SYSTEM_PROMPTS
 from app.schemas.planner import Task, TaskResult
 
 class ResearcherAgent:
     def __init__(self, temperature: float = 0.3):
         self.llm = get_llm()
+        self.system_prompt = SYSTEM_PROMPTS["researcher"]
 
     def execute(self, task: Task) -> TaskResult:
-        prompt = f"Perform thorough research and gather key information for task: {task.description}"
+        prompt = f"{self.system_prompt}\n\nTask: {task.description}"
         response = self.llm.invoke(prompt)
         output_text = response.content if isinstance(response.content, str) else str(response.content)
         
@@ -19,11 +21,13 @@ class ResearcherAgent:
 class WriterAgent:
     def __init__(self, temperature: float = 0.7):
         self.llm = get_llm()
+        self.system_prompt = SYSTEM_PROMPTS["writer"]
 
     def execute(self, task: Task, context: str = "") -> TaskResult:
         prompt = (
-            f"Use the following research context:\n{context}\n\n"
-            f"Write detailed content for task: {task.description}"
+            f"{self.system_prompt}\n\n"
+            f"Context:\n{context}\n\n"
+            f"Task: {task.description}"
         )
         response = self.llm.invoke(prompt)
         output_text = response.content if isinstance(response.content, str) else str(response.content)
