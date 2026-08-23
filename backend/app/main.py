@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import execution, health
+from app.api import execution, health, prompts
 
 app = FastAPI(title="AgentForge API")
 
@@ -14,6 +14,7 @@ app.add_middleware(
 
 app.include_router(execution.router, prefix="/api")
 app.include_router(health.router, prefix="/api")
+app.include_router(prompts.router, prefix="/api")
 
 @app.get("/")
 def read_root():
