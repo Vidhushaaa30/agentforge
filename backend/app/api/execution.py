@@ -17,3 +17,9 @@ def execute_workflow(request: WorkflowExecutionRequest):
 @router.get("/history")
 def get_execution_history():
     return history_service.get_all_logs()
+@router.get("/history/{log_id}")
+def get_execution_log(log_id: str):
+    log = history_service.get_log_by_id(log_id)
+    if not log:
+        raise HTTPException(status_code=404, detail="Execution log not found")
+    return log

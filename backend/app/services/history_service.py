@@ -1,4 +1,4 @@
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from app.schemas.history import ExecutionLog
 import uuid
 from datetime import datetime
@@ -21,5 +21,8 @@ class HistoryService:
 
     def get_all_logs(self) -> List[ExecutionLog]:
         return list(self._logs.values())
+
+    def get_log_by_id(self, log_id: str) -> Optional[ExecutionLog]:
+        return self._logs.get(log_id)
 
 history_service = HistoryService()
