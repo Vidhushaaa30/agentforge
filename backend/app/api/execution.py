@@ -1,18 +1,15 @@
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from app.schemas.requests import WorkflowExecutionRequest
 from app.services.orchestrator import Orchestrator
 from app.services.history_service import history_service
 
 router = APIRouter()
 orchestrator = Orchestrator()
 
-class ExecutionRequest(BaseModel):
-    prompt: str
-
 @router.post("/execute")
-def execute_workflow(request: ExecutionRequest):
+def execute_workflow(request: WorkflowExecutionRequest):
     try:
-        result = orchestrator.run_workflow(request.prompt)
+        result = orchestrator.run_workflow(request.prompt, max_tasks=request.max_tasks)
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"LLM Execution Error: {str(e)}")
