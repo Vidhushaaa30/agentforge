@@ -25,4 +25,10 @@ class HistoryService:
     def get_log_by_id(self, log_id: str) -> Optional[ExecutionLog]:
         return self._logs.get(log_id)
 
+    def search_logs_by_keyword(self, keyword: str) -> List[ExecutionLog]:
+        return [
+            log for log in self._logs.values()
+            if keyword.lower() in log.prompt.lower()
+        ]
+
 history_service = HistoryService()
