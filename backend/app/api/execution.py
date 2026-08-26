@@ -29,3 +29,7 @@ def get_execution_log(log_id: str):
     if not log:
         raise HTTPException(status_code=404, detail="Execution log not found")
     return log
+@router.delete("/history")
+def clear_execution_history():
+    count = history_service.clear_history()
+    return {"message": f"Cleared {count} execution log entries."}

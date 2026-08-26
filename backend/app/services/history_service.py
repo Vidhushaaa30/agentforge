@@ -31,4 +31,9 @@ class HistoryService:
             if keyword.lower() in log.prompt.lower()
         ]
 
+    def clear_history(self) -> int:
+        count = len(self._logs)
+        self._logs.clear()
+        return count
+
 history_service = HistoryService()
