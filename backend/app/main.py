@@ -2,10 +2,12 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.exceptions import AgentForgeException
+from app.core.middleware import RequestLoggingMiddleware
 from app.api import execution, health, prompts, config_info
 
 app = FastAPI(title="AgentForge API")
 
+app.add_middleware(RequestLoggingMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
