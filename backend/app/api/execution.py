@@ -1,14 +1,16 @@
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Depends
 from typing import Optional
 from app.schemas.requests import WorkflowExecutionRequest
 from app.services.orchestrator import Orchestrator
 from app.services.history_service import history_service
+from app.services.rate_limiter import rate_limiter
 
 router = APIRouter()
 orchestrator = Orchestrator()
 
 @router.post("/execute")
 def execute_workflow(request: WorkflowExecutionRequest):
+    rate_limiter.check_rate_limit()
     try:
         result = orchestrator.run_workflow(request.prompt, max_tasks=request.max_tasks)
         return result
