@@ -1,6 +1,7 @@
 import time
 from app.core.config import get_llm
 from app.core.prompts import SYSTEM_PROMPTS
+from app.core.retry import execute_with_retry
 from app.schemas.planner import Task, TaskResult
 from app.schemas.enums import TaskStatus
 
@@ -12,7 +13,8 @@ class ResearcherAgent:
     def execute(self, task: Task) -> TaskResult:
         start_time = time.time()
         prompt = f"{self.system_prompt}\n\nTask: {task.description}"
-        response = self.llm.invoke(prompt)
+        
+        response = execute_with_retry(self.llm.invoke, max_retries=2, input=prompt)
         output_text = response.content if isinstance(response.content, str) else str(response.content)
         elapsed = round(time.time() - start_time, 2)
         
@@ -36,7 +38,7 @@ class WriterAgent:
             f"Context:\n{context}\n\n"
             f"Task: {task.description}"
         )
-        response = self.llm.invoke(prompt)
+        response = execute_with_retry(self.llm.invoke, max_retries=2, input=prompt)
         output_text = response.content if isinstance(response.content, str) else str(response.content)
         elapsed = round(time.time() - start_time, 2)
         
