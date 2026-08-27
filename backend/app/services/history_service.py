@@ -1,5 +1,6 @@
 from typing import List, Dict, Any, Optional
 from app.schemas.history import ExecutionLog
+from app.services.storage_service import storage_service
 import uuid
 from datetime import datetime
 
@@ -17,13 +18,20 @@ class HistoryService:
             results=results
         )
         self._logs[log_id] = log
+        storage_service.save_json(log_id, log.model_dump())
         return log
 
     def get_all_logs(self) -> List[ExecutionLog]:
         return list(self._logs.values())
 
     def get_log_by_id(self, log_id: str) -> Optional[ExecutionLog]:
-        return self._logs.get(log_id)
+        if log_id in self._logs:
+            return self._logs[log_id]
+        
+        saved_data = storage_service.load_json(log_id)
+        if saved_data:
+            return ExecutionLog(**saved_data)
+        return None
 
     def search_logs_by_keyword(self, keyword: str) -> List[ExecutionLog]:
         return [
