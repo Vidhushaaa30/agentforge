@@ -5,7 +5,7 @@ from app.services.history_service import history_service
 from app.services.metrics_service import metrics_service
 from app.services.summary_service import summary_service
 from app.services.task_filter import task_filter_service
-from app.services.cancellation_service import cancellation_service
+from app.core.logger import logger
 
 class Orchestrator:
     def __init__(self):
@@ -13,18 +13,19 @@ class Orchestrator:
         self.researcher = ResearcherAgent()
         self.writer = WriterAgent()
 
-    def run_workflow(self, user_prompt: str, max_tasks: int = 5, execution_id: str = None):
+    def run_workflow(self, user_prompt: str, max_tasks: int = 5):
+        logger.info(f"Starting workflow execution for prompt: '{user_prompt[:30]}...'")
         start_time = time.time()
-        plan = self.planner.create_plan(user_prompt)
         
+        plan = self.planner.create_plan(user_prompt)
         plan.tasks = task_filter_service.limit_tasks(plan.tasks, max_tasks)
+        logger.info(f"Plan generated with {len(plan.tasks)} task(s)")
+
         results = []
         context = ""
 
         for task in plan.tasks:
-            if execution_id and cancellation_service.is_cancelled(execution_id):
-                break
-
+            logger.info(f"Executing task {task.id} with agent '{task.assigned_agent}'")
             if task.assigned_agent == "researcher":
                 result = self.researcher.execute(task)
             else:
@@ -43,6 +44,8 @@ class Orchestrator:
             prompt=user_prompt, 
             results=dumped_results
         )
+
+        logger.info(f"Workflow completed successfully in {round(elapsed_time, 2)} seconds")
 
         return {
             "execution_id": log.id,
