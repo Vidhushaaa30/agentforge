@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.exceptions import AgentForgeException
 from app.core.middleware import RequestLoggingMiddleware
-from app.api import execution, health, prompts, config_info, storage_info
+from app.api import execution, health, prompts, config_info, storage_info, export
 
 app = FastAPI(title="AgentForge API")
 
@@ -28,6 +28,7 @@ app.include_router(health.router, prefix="/api")
 app.include_router(prompts.router, prefix="/api")
 app.include_router(config_info.router, prefix="/api")
 app.include_router(storage_info.router, prefix="/api")
+app.include_router(export.router, prefix="/api")
 
 @app.get("/")
 def read_root():
