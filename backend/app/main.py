@@ -33,3 +33,6 @@ app.include_router(export.router, prefix="/api")
 @app.get("/")
 def read_root():
     return {"message": "AgentForge API is running"}
+from app.api import execution, health, prompts, config_info, storage_info, export, system
+
+app.include_router(system.router, prefix="/api")
