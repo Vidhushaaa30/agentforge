@@ -5,6 +5,7 @@ from app.services.history_service import history_service
 from app.services.metrics_service import metrics_service
 from app.services.summary_service import summary_service
 from app.services.task_filter import task_filter_service
+from app.services.cache_service import cache_service
 from app.core.logger import logger
 
 class Orchestrator:
@@ -14,18 +15,22 @@ class Orchestrator:
         self.writer = WriterAgent()
 
     def run_workflow(self, user_prompt: str, max_tasks: int = 5):
+        cache_key = f"{user_prompt}_{max_tasks}"
+        cached_result = cache_service.get(cache_key)
+        if cached_result:
+            logger.info(f"Returning cached execution for prompt: '{user_prompt[:30]}...'")
+            return cached_result
+
         logger.info(f"Starting workflow execution for prompt: '{user_prompt[:30]}...'")
         start_time = time.time()
         
         plan = self.planner.create_plan(user_prompt)
         plan.tasks = task_filter_service.limit_tasks(plan.tasks, max_tasks)
-        logger.info(f"Plan generated with {len(plan.tasks)} task(s)")
-
+        
         results = []
         context = ""
 
         for task in plan.tasks:
-            logger.info(f"Executing task {task.id} with agent '{task.assigned_agent}'")
             if task.assigned_agent == "researcher":
                 result = self.researcher.execute(task)
             else:
@@ -45,12 +50,13 @@ class Orchestrator:
             results=dumped_results
         )
 
-        logger.info(f"Workflow completed successfully in {round(elapsed_time, 2)} seconds")
-
-        return {
+        response_data = {
             "execution_id": log.id,
             "summary": summary,
             "plan": plan,
             "results": results,
             "metrics": metrics
         }
+        
+        cache_service.set(cache_key, response_data)
+        return response_data
