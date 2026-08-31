@@ -5,7 +5,9 @@ from app.core.exceptions import AgentForgeException
 from app.core.middleware import RequestLoggingMiddleware
 from app.core.logger import logger
 from app.api import execution, health, prompts, config_info, storage_info, export, system, cache_info, analytics
+from app.api import rate_limit_info
 
+app.include_router(rate_limit_info.router, prefix="/api", tags=["System & Health"])
 app.include_router(analytics.router, prefix="/api", tags=["System & Health"])
 
 app = FastAPI(title="AgentForge API", version="0.3.0")
