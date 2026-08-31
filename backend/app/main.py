@@ -4,7 +4,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.exceptions import AgentForgeException
 from app.core.middleware import RequestLoggingMiddleware
 from app.core.logger import logger
-from app.api import execution, health, prompts, config_info, storage_info, export, system, cache_info
+from app.api import execution, health, prompts, config_info, storage_info, export, system, cache_info, analytics
+
+app.include_router(analytics.router, prefix="/api", tags=["System & Health"])
 
 app = FastAPI(title="AgentForge API", version="0.3.0")
 
