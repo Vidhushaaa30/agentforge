@@ -14,4 +14,7 @@ class SimpleRateLimiter:
             raise HTTPException(status_code=429, detail="Rate limit exceeded. Try again later.")
         self.requests.append(now)
 
+    def reset(self):
+        self.requests.clear()
+
 rate_limiter = SimpleRateLimiter()
