@@ -3,20 +3,10 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.exceptions import AgentForgeException
 from app.core.middleware import RequestLoggingMiddleware
+from app.core.logger import logger
 from app.api import execution, health, prompts, config_info, storage_info, export, system, cache_info
 
-tags_metadata = [
-    {"name": "Execution", "description": "Workflow execution and history operations"},
-    {"name": "System & Health", "description": "Health checks, diagnostics, and storage statistics"},
-    {"name": "Configuration", "description": "System prompts and static configuration info"},
-]
-
-app = FastAPI(
-    title="AgentForge API",
-    description="Multi-agent workflow orchestration engine",
-    version="0.2.0",
-    openapi_tags=tags_metadata
-)
+app = FastAPI(title="AgentForge API", version="0.3.0")
 
 app.add_middleware(RequestLoggingMiddleware)
 app.add_middleware(
@@ -32,6 +22,14 @@ async def custom_exception_handler(request: Request, exc: AgentForgeException):
     return JSONResponse(
         status_code=400,
         content={"error": type(exc).__name__, "detail": str(exc)}
+    )
+
+@app.exception_handler(Exception)
+async def global_unhandled_exception_handler(request: Request, exc: Exception):
+    logger.error(f"Unhandled system exception: {str(exc)}")
+    return JSONResponse(
+        status_code=500,
+        content={"error": "InternalServerError", "detail": "An unexpected error occurred."}
     )
 
 app.include_router(execution.router, prefix="/api", tags=["Execution"])
