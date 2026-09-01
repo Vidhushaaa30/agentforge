@@ -1,17 +1,14 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from app.core.exceptions import AgentForgeException
 from app.core.middleware import RequestLoggingMiddleware
-from app.core.logger import logger
-from app.api import execution, health, prompts, config_info, storage_info, export, system, cache_info, analytics
-from app.api import rate_limit_info
+from app.api import execution, health, prompts, config_info, storage_info, export, system, cache_info, analytics, rate_limit_info
 
-app.include_router(rate_limit_info.router, prefix="/api", tags=["System & Health"])
-app.include_router(analytics.router, prefix="/api", tags=["System & Health"])
+app = FastAPI(title="AgentForge API", version="0.4.0")
 
-app = FastAPI(title="AgentForge API", version="0.3.0")
-
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 app.add_middleware(RequestLoggingMiddleware)
 app.add_middleware(
     CORSMiddleware,
@@ -28,14 +25,6 @@ async def custom_exception_handler(request: Request, exc: AgentForgeException):
         content={"error": type(exc).__name__, "detail": str(exc)}
     )
 
-@app.exception_handler(Exception)
-async def global_unhandled_exception_handler(request: Request, exc: Exception):
-    logger.error(f"Unhandled system exception: {str(exc)}")
-    return JSONResponse(
-        status_code=500,
-        content={"error": "InternalServerError", "detail": "An unexpected error occurred."}
-    )
-
 app.include_router(execution.router, prefix="/api", tags=["Execution"])
 app.include_router(health.router, prefix="/api", tags=["System & Health"])
 app.include_router(prompts.router, prefix="/api", tags=["Configuration"])
@@ -44,6 +33,8 @@ app.include_router(storage_info.router, prefix="/api", tags=["System & Health"])
 app.include_router(export.router, prefix="/api", tags=["Execution"])
 app.include_router(system.router, prefix="/api", tags=["System & Health"])
 app.include_router(cache_info.router, prefix="/api", tags=["System & Health"])
+app.include_router(analytics.router, prefix="/api", tags=["System & Health"])
+app.include_router(rate_limit_info.router, prefix="/api", tags=["System & Health"])
 
 @app.get("/")
 def read_root():
