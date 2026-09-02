@@ -5,6 +5,16 @@ from fastapi.middleware.gzip import GZipMiddleware
 from app.core.exceptions import AgentForgeException
 from app.core.middleware import RequestLoggingMiddleware
 from app.api import execution, health, prompts, config_info, storage_info, export, system, cache_info, analytics, rate_limit_info
+from app.api import (
+    execution, health, prompts, config_info, 
+    storage_info, export, system, cache_info, 
+    analytics, rate_limit_info, dlq_info, 
+    dynamic_config, stream
+)
+
+app.include_router(dlq_info.router, prefix="/api", tags=["Execution"])
+app.include_router(dynamic_config.router, prefix="/api", tags=["Configuration"])
+app.include_router(stream.router, prefix="/api", tags=["Execution"])
 
 app = FastAPI(title="AgentForge API", version="0.4.0")
 
