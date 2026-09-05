@@ -5,6 +5,7 @@ from app.services.history_service import history_service
 from app.services.metrics_service import metrics_service
 from app.services.summary_service import summary_service
 from app.services.task_filter import task_filter_service
+from app.services.audit_service import audit_service
 from app.core.logger import logger
 
 class Orchestrator:
@@ -13,6 +14,7 @@ class Orchestrator:
 
     def run_workflow(self, user_prompt: str, max_tasks: int = 5):
         logger.info(f"Starting workflow execution for prompt: '{user_prompt[:30]}...'")
+        audit_service.log_event("workflow_started", {"prompt": user_prompt[:50], "max_tasks": max_tasks})
         start_time = time.time()
         
         plan = self.planner.create_plan(user_prompt)
@@ -40,6 +42,7 @@ class Orchestrator:
         summary = summary_service.generate_summary(dumped_results)
 
         log = history_service.save_log(prompt=user_prompt, results=dumped_results)
+        audit_service.log_event("workflow_completed", {"log_id": log.id, "elapsed_time": elapsed_time})
 
         return {
             "execution_id": log.id,
