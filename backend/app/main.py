@@ -9,8 +9,12 @@ from app.api import (
     execution, health, prompts, config_info, 
     storage_info, export, system, cache_info, 
     analytics, rate_limit_info, dlq_info, 
-    dynamic_config, stream, metrics_export, agents_info
+    dynamic_config, stream, metrics_export, agents_info,
+    audit_info, key_info
 )
+
+app.include_router(audit_info.router, prefix="/api", tags=["System & Health"])
+app.include_router(key_info.router, prefix="/api", tags=["Configuration"])
 
 app.include_router(metrics_export.router, prefix="/api", tags=["System & Health"])
 app.include_router(agents_info.router, prefix="/api", tags=["Configuration"])
