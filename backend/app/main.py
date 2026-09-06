@@ -10,8 +10,10 @@ from app.api import (
     storage_info, export, system, cache_info, 
     analytics, rate_limit_info, dlq_info, 
     dynamic_config, stream, metrics_export, agents_info,
-    audit_info, key_info
+    audit_info, key_info, telemetry
 )
+
+app.include_router(telemetry.router, prefix="/api", tags=["System & Health"])
 
 app.include_router(audit_info.router, prefix="/api", tags=["System & Health"])
 app.include_router(key_info.router, prefix="/api", tags=["Configuration"])
