@@ -6,13 +6,15 @@ from app.services.metrics_service import metrics_service
 from app.services.summary_service import summary_service
 from app.services.task_filter import task_filter_service
 from app.services.audit_service import audit_service
+from app.services.cancellation_service import cancellation_service
+from app.core.exceptions import AgentForgeException
 from app.core.logger import logger
 
 class Orchestrator:
     def __init__(self):
         self.planner = PlannerAgent()
 
-    def run_workflow(self, user_prompt: str, max_tasks: int = 5):
+    def run_workflow(self, user_prompt: str, max_tasks: int = 5, execution_id: str = None):
         logger.info(f"Starting workflow execution for prompt: '{user_prompt[:30]}...'")
         audit_service.log_event("workflow_started", {"prompt": user_prompt[:50], "max_tasks": max_tasks})
         start_time = time.time()
@@ -24,6 +26,10 @@ class Orchestrator:
         context = ""
 
         for task in plan.tasks:
+            if execution_id and cancellation_service.is_cancelled(execution_id):
+                audit_service.log_event("workflow_cancelled", {"execution_id": execution_id})
+                raise AgentForgeException(f"Execution {execution_id} was cancelled by user request.")
+
             agent_cls = agent_registry.get_agent_class(task.assigned_agent)
             agent_instance = agent_cls()
             
