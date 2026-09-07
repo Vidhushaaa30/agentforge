@@ -12,6 +12,18 @@ from app.api import (
     dynamic_config, stream, metrics_export, agents_info,
     audit_info, key_info, telemetry
 )
+from app.api import (
+    execution, health, prompts, config_info, 
+    storage_info, export, system, cache_info, 
+    analytics, rate_limit_info, dlq_info, 
+    dynamic_config, stream, metrics_export, agents_info,
+    audit_info, key_info, telemetry, control
+)
+from app.core.broadcaster import setup_event_listeners
+
+setup_event_listeners()
+
+app.include_router(control.router, prefix="/api", tags=["Execution"])
 
 app.include_router(telemetry.router, prefix="/api", tags=["System & Health"])
 
