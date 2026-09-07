@@ -1,30 +1,29 @@
-from fastapi import APIRouter, HTTPException, Depends
+import uuid
+from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
 from app.schemas.requests import WorkflowExecutionRequest
 from app.services.orchestrator import Orchestrator
+from app.services.background_worker import background_worker
 from app.core.sanitizer import sanitize_prompt
 from app.core.guardrails import check_prompt_safety
 from app.core.dependencies import get_orchestrator
 from app.core.auth import verify_api_key
-from app.core.ttl_cache import ttl_cache
 
 router = APIRouter()
 
-@router.post("/execute", dependencies=[Depends(verify_api_key)])
-def execute_workflow(
+@router.post("/execute/async", dependencies=[Depends(verify_api_key)])
+async def execute_workflow_async(
     request: WorkflowExecutionRequest,
-    orchestrator: Orchestrator = Depends(get_orchestrator)
+    background_tasks: BackgroundTasks
 ):
     check_prompt_safety(request.prompt)
     sanitized_text = sanitize_prompt(request.prompt)
-    
-    cache_key = f"exec:{hash(sanitized_text)}:{request.max_tasks}"
-    cached_response = ttl_cache.get(cache_key)
-    if cached_response:
-        return cached_response
+    execution_id = str(uuid.uuid4())
 
-    try:
-        result = orchestrator.run_workflow(sanitized_text, max_tasks=request.max_tasks)
-        ttl_cache.set(cache_key, result, ttl=120)
-        return result
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"LLM Execution Error: {str(e)}")
+    background_tasks.add_task(
+        background_worker.process_async_workflow,
+        sanitized_text,
+        request.max_tasks,
+        execution_id
+    )
+
+    return {"execution_id": execution_id, "status": "queued", "message": "Task queued for background execution"}
