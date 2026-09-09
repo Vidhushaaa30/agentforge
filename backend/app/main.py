@@ -17,9 +17,11 @@ from app.api import (
     storage_info, export, system, cache_info, 
     analytics, rate_limit_info, dlq_info, 
     dynamic_config, stream, metrics_export, agents_info,
-    audit_info, key_info, telemetry, control, job_status, maintenance
+    audit_info, key_info, telemetry, control, job_status, 
+    maintenance, batch_execution
 )
 
+app.include_router(batch_execution.router, prefix="/api", tags=["Execution"])
 app.include_router(job_status.router, prefix="/api", tags=["Execution"])
 app.include_router(maintenance.router, prefix="/api", tags=["System & Health"])
 
