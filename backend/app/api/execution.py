@@ -1,29 +1,23 @@
-import uuid
-from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
+from fastapi import APIRouter, HTTPException, Depends
 from app.schemas.requests import WorkflowExecutionRequest
 from app.services.orchestrator import Orchestrator
-from app.services.background_worker import background_worker
 from app.core.sanitizer import sanitize_prompt
 from app.core.guardrails import check_prompt_safety
 from app.core.dependencies import get_orchestrator
 from app.core.auth import verify_api_key
+from app.core.rate_limit_dep import check_rate_limit
 
 router = APIRouter()
 
-@router.post("/execute/async", dependencies=[Depends(verify_api_key)])
-async def execute_workflow_async(
+@router.post("/execute", dependencies=[Depends(verify_api_key), Depends(check_rate_limit)])
+def execute_workflow(
     request: WorkflowExecutionRequest,
-    background_tasks: BackgroundTasks
+    orchestrator: Orchestrator = Depends(get_orchestrator)
 ):
     check_prompt_safety(request.prompt)
     sanitized_text = sanitize_prompt(request.prompt)
-    execution_id = str(uuid.uuid4())
-
-    background_tasks.add_task(
-        background_worker.process_async_workflow,
-        sanitized_text,
-        request.max_tasks,
-        execution_id
-    )
-
-    return {"execution_id": execution_id, "status": "queued", "message": "Task queued for background execution"}
+    try:
+        result = orchestrator.run_workflow(sanitized_text, max_tasks=request.max_tasks)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"LLM Execution Error: {str(e)}")
