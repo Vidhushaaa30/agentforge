@@ -1,20 +1,21 @@
 import time
-from fastapi import HTTPException
 
-class SimpleRateLimiter:
-    def __init__(self, max_requests: int = 10, window_seconds: int = 60):
-        self.max_requests = max_requests
-        self.window_seconds = window_seconds
-        self.requests = []
+class TokenBucketRateLimiter:
+    def __init__(self, capacity: int = 60, refill_rate: float = 1.0):
+        self.capacity = capacity
+        self.refill_rate = refill_rate
+        self.tokens = capacity
+        self.last_refill = time.time()
 
-    def check_rate_limit(self):
+    def consume(self, tokens: int = 1) -> bool:
         now = time.time()
-        self.requests = [t for t in self.requests if now - t < self.window_seconds]
-        if len(self.requests) >= self.max_requests:
-            raise HTTPException(status_code=429, detail="Rate limit exceeded. Try again later.")
-        self.requests.append(now)
+        elapsed = now - self.last_refill
+        self.tokens = min(self.capacity, self.tokens + elapsed * self.refill_rate)
+        self.last_refill = now
 
-    def reset(self):
-        self.requests.clear()
+        if self.tokens >= tokens:
+            self.tokens -= tokens
+            return True
+        return False
 
-rate_limiter = SimpleRateLimiter()
+rate_limiter = TokenBucketRateLimiter()
