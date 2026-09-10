@@ -12,13 +12,25 @@ from app.api import (
     dynamic_config, stream, metrics_export, agents_info,
     audit_info, key_info, telemetry
 )
-from app.api import (
-    execution, health, prompts, config_info, 
-    storage_info, export, system, cache_info, 
-    analytics, rate_limit_info, dlq_info, 
-    dynamic_config, stream, metrics_export, agents_info,
-    audit_info, key_info, telemetry, control, job_status, 
-    maintenance, batch_execution
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
+from app.core.exceptions import AgentForgeException
+from app.core.middleware import RequestLoggingMiddleware
+from app.core.version_middleware import APIVersionHeaderMiddleware
+
+app = FastAPI(title="AgentForge API", version="0.4.0")
+
+app.add_middleware(GZipMiddleware, minimum_size=1000)
+app.add_middleware(RequestLoggingMiddleware)
+app.add_middleware(APIVersionHeaderMiddleware)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 app.include_router(batch_execution.router, prefix="/api", tags=["Execution"])
