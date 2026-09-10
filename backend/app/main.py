@@ -5,13 +5,6 @@ from fastapi.middleware.gzip import GZipMiddleware
 from app.core.exceptions import AgentForgeException
 from app.core.middleware import RequestLoggingMiddleware
 from app.api import execution, health, prompts, config_info, storage_info, export, system, cache_info, analytics, rate_limit_info
-from app.api import (
-    execution, health, prompts, config_info, 
-    storage_info, export, system, cache_info, 
-    analytics, rate_limit_info, dlq_info, 
-    dynamic_config, stream, metrics_export, agents_info,
-    audit_info, key_info, telemetry
-)
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -32,6 +25,16 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+from app.api import (
+    execution, health, prompts, config_info, 
+    storage_info, export, system, cache_info, 
+    analytics, rate_limit_info, dlq_info, 
+    dynamic_config, stream, metrics_export, agents_info,
+    audit_info, key_info, telemetry, control, job_status, 
+    maintenance, batch_execution, readiness
+)
+
+app.include_router(readiness.router, prefix="/api", tags=["System & Health"])
 
 app.include_router(batch_execution.router, prefix="/api", tags=["Execution"])
 app.include_router(job_status.router, prefix="/api", tags=["Execution"])
