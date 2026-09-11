@@ -7,4 +7,5 @@ class ExecutionLog(BaseModel):
     prompt: str
     status: str
     created_at: datetime
-    results: List[Dict[str, Any]]
+    results: List[Dict[str, Any]]git add app/schemas/history.py
+git commit -m "Add ExecutionLog schema for state history"
