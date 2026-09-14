@@ -6,7 +6,8 @@ from app.services.metrics_service import metrics_service
 from app.services.summary_service import summary_service
 from app.services.task_filter import task_filter_service
 from app.services.audit_service import audit_service
-from app.services.profiler import execution_profiler
+from app.core.timeout import execute_with_timeout
+from app.core.timeout_override import get_current_timeout
 from app.core.logger import logger
 
 class Orchestrator:
@@ -18,27 +19,24 @@ class Orchestrator:
         audit_service.log_event("workflow_started", {"prompt": user_prompt[:50], "max_tasks": max_tasks})
         start_time = time.time()
         
-        execution_profiler.start_mark("planning")
         plan = self.planner.create_plan(user_prompt)
         plan.tasks = task_filter_service.limit_tasks(plan.tasks, max_tasks)
-        planning_duration = execution_profiler.end_mark("planning")
-
+        
         results = []
         context = ""
+        current_timeout = get_current_timeout()
 
-        execution_profiler.start_mark("tasks_execution")
         for task in plan.tasks:
             agent_cls = agent_registry.get_agent_class(task.assigned_agent)
             agent_instance = agent_cls()
             
             if task.assigned_agent == "researcher":
-                result = agent_instance.execute(task)
+                result = execute_with_timeout(agent_instance.execute, current_timeout, task)
             else:
-                result = agent_instance.execute(task, context=context)
+                result = execute_with_timeout(agent_instance.execute, current_timeout, task, context=context)
             
             results.append(result)
             context += f"\n--- Context from Task {task.id} ({task.title}) ---\n{result.output}\n"
-        execution_duration = execution_profiler.end_mark("tasks_execution")
 
         elapsed_time = time.time() - start_time
         dumped_results = [r.model_dump() for r in results]
@@ -54,9 +52,5 @@ class Orchestrator:
             "summary": summary,
             "plan": plan,
             "results": results,
-            "metrics": metrics,
-            "profiling": {
-                "planning_ms": planning_duration,
-                "execution_ms": execution_duration
-            }
+            "metrics": metrics
         }
