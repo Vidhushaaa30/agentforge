@@ -41,6 +41,18 @@ from app.api import (
     audit_info, key_info, telemetry, control, job_status, 
     maintenance, batch_execution, readiness, feature_info, heartbeat
 )
+from app.api import (
+    execution, health, prompts, config_info, 
+    storage_info, export, system, cache_info, 
+    analytics, rate_limit_info, dlq_info, 
+    dynamic_config, stream, metrics_export, agents_info,
+    audit_info, key_info, telemetry, control, job_status, 
+    maintenance, batch_execution, readiness, feature_info, heartbeat,
+    capabilities_info, json_telemetry_info
+)
+
+app.include_router(capabilities_info.router, prefix="/api", tags=["Configuration"])
+app.include_router(json_telemetry_info.router, prefix="/api", tags=["System & Health"])
 
 app.include_router(feature_info.router, prefix="/api", tags=["Configuration"])
 app.include_router(heartbeat.router, prefix="/api", tags=["System & Health"])
