@@ -6,8 +6,7 @@ from app.services.metrics_service import metrics_service
 from app.services.summary_service import summary_service
 from app.services.task_filter import task_filter_service
 from app.services.audit_service import audit_service
-from app.core.timeout import execute_with_timeout
-from app.core.timeout_override import get_current_timeout
+from app.services.webhook_service import webhook_service
 from app.core.logger import logger
 
 class Orchestrator:
@@ -24,16 +23,15 @@ class Orchestrator:
         
         results = []
         context = ""
-        current_timeout = get_current_timeout()
 
         for task in plan.tasks:
             agent_cls = agent_registry.get_agent_class(task.assigned_agent)
             agent_instance = agent_cls()
             
             if task.assigned_agent == "researcher":
-                result = execute_with_timeout(agent_instance.execute, current_timeout, task)
+                result = agent_instance.execute(task)
             else:
-                result = execute_with_timeout(agent_instance.execute, current_timeout, task, context=context)
+                result = agent_instance.execute(task, context=context)
             
             results.append(result)
             context += f"\n--- Context from Task {task.id} ({task.title}) ---\n{result.output}\n"
@@ -46,6 +44,7 @@ class Orchestrator:
 
         log = history_service.save_log(prompt=user_prompt, results=dumped_results)
         audit_service.log_event("workflow_completed", {"log_id": log.id, "elapsed_time": elapsed_time})
+        webhook_service.notify_event("workflow.completed", {"execution_id": log.id, "summary": summary})
 
         return {
             "execution_id": log.id,
