@@ -42,6 +42,10 @@ from app.api import (
     maintenance, batch_execution, readiness, feature_info, heartbeat,
     capabilities_info, json_telemetry_info, webhook_info, deep_health
 )
+from app.api import worker_load_info, circuit_info
+
+app.include_router(worker_load_info.router, prefix="/api", tags=["System & Health"])
+app.include_router(circuit_info.router, prefix="/api", tags=["System & Health"])
 from app.core.correlation import CorrelationIdMiddleware
 
 app.add_middleware(CorrelationIdMiddleware)
