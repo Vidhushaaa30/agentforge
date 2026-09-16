@@ -1,16 +1,18 @@
 import logging
-import sys
+from app.core.correlation import get_correlation_id
 
-def setup_logger():
-    logger = logging.getLogger("agentforge")
-    logger.setLevel(logging.INFO)
-    
-    if not logger.handlers:
-        handler = logging.StreamHandler(sys.stdout)
-        formatter = logging.Formatter("[%(asctime)s] [%(levelname)s] - %(message)s")
-        handler.setFormatter(formatter)
-        logger.addHandler(handler)
-        
-    return logger
+class CorrelationFilter(logging.Filter):
+    def filter(self, record):
+        record.correlation_id = get_correlation_id() or "N/A"
+        return True
 
-logger = setup_logger()
+logger = logging.getLogger("agentforge")
+logger.setLevel(logging.INFO)
+
+handler = logging.StreamHandler()
+formatter = logging.Formatter("[%(asctime)s] [%(levelname)s] [corr_id:%(correlation_id)s] %(message)s")
+handler.setFormatter(formatter)
+
+logger.addFilter(CorrelationFilter())
+if not logger.handlers:
+    logger.addHandler(handler)
