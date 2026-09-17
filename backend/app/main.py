@@ -43,6 +43,9 @@ from app.api import (
     capabilities_info, json_telemetry_info, webhook_info, deep_health
 )
 from app.api import worker_load_info, circuit_info
+from app.api import capability_info
+
+app.include_router(capability_info.router, prefix="/api", tags=["Configuration"])
 
 app.include_router(worker_load_info.router, prefix="/api", tags=["System & Health"])
 app.include_router(circuit_info.router, prefix="/api", tags=["System & Health"])
