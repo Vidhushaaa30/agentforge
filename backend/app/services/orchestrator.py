@@ -6,7 +6,7 @@ from app.services.metrics_service import metrics_service
 from app.services.summary_service import summary_service
 from app.services.task_filter import task_filter_service
 from app.services.audit_service import audit_service
-from app.services.webhook_service import webhook_service
+from app.services.step_aggregator import step_aggregator
 from app.core.logger import logger
 
 class Orchestrator:
@@ -41,15 +41,16 @@ class Orchestrator:
         
         metrics = metrics_service.calculate_metrics(dumped_results, elapsed_time)
         summary = summary_service.generate_summary(dumped_results)
+        aggregation = step_aggregator.aggregate_step_outputs(dumped_results)
 
         log = history_service.save_log(prompt=user_prompt, results=dumped_results)
         audit_service.log_event("workflow_completed", {"log_id": log.id, "elapsed_time": elapsed_time})
-        webhook_service.notify_event("workflow.completed", {"execution_id": log.id, "summary": summary})
 
         return {
             "execution_id": log.id,
             "summary": summary,
             "plan": plan,
             "results": results,
-            "metrics": metrics
+            "metrics": metrics,
+            "aggregation": aggregation
         }
